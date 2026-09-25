@@ -1,3 +1,25 @@
+---
+license: mit
+base_model: facebook/xglm-2.9B
+tags:
+  - gguf
+  - xglm
+  - multilingual
+  - bengali
+  - bangla
+  - text-generation
+language:
+  - bn
+  - en
+  - fr
+  - de
+  - ar
+  - ru
+  - zh
+  - ja
+  - es
+---
+
 <div align="center">
 
 <p>
@@ -6,99 +28,122 @@
   <img alt="GGUF formats" src="https://img.shields.io/badge/GGUF-F16%20%7C%20Q8_0%20%7C%20Q4_K_M-FFD21E?style=for-the-badge">
   <img alt="Languages" src="https://img.shields.io/badge/Languages-30%2B-00A6A6?style=for-the-badge">
   <img alt="Bengali and Bangla" src="https://img.shields.io/badge/Bengali-Bangla-16A34A?style=for-the-badge">
-  <img alt="Native llama.cpp" src="https://img.shields.io/badge/llama.cpp-native-24292F?style=for-the-badge">
+  <img alt="Runtime" src="https://img.shields.io/badge/runtime-llama.cpp%20%2B%20patch-E8590C?style=for-the-badge">
   <img alt="Validated" src="https://img.shields.io/badge/validated-pass-22C55E?style=for-the-badge">
   <img alt="MIT license" src="https://img.shields.io/badge/License-MIT-7C3AED?style=for-the-badge">
 </p>
 
 # 🌍 XGLM-2.9B GGUF
 
-**Native llama.cpp support and release hub for Meta’s higher-quality multilingual XGLM model.**
+**Meta’s multilingual XGLM base model for higher-quality Bengali and global language workloads.**
 
-🌐 30+ Languages &nbsp;•&nbsp; 🇧🇩 Bengali / Bangla &nbsp;•&nbsp; 🧠 2.9B Parameters &nbsp;•&nbsp; ⚙️ Native GGUF &nbsp;•&nbsp; ✅ Published
+🌐 30+ Languages &nbsp;•&nbsp; 🇧🇩 Bengali / Bangla &nbsp;•&nbsp; 🧠 Base Model &nbsp;•&nbsp; ⚙️ GGUF (llama.cpp + patch) &nbsp;•&nbsp; 📦 2.9B Parameters &nbsp;•&nbsp; ⚖️ MIT
 
-[🚀 Hugging Face Release](https://huggingface.co/ShayonSarker/xglm-2.9B-GGUF) · [Meta Source Model](https://huggingface.co/facebook/xglm-2.9B) · [llama.cpp](https://github.com/ggml-org/llama.cpp)
+[Source model](https://huggingface.co/facebook/xglm-2.9B) · [llama.cpp](https://github.com/ggml-org/llama.cpp)
 
-👇 [View verified English and Bangla question/answer examples](#user-content-verified-question-answer-examples)
+👇 [View verified English and Bangla question/answer examples](#verified-question-answer-examples)
 
 </div>
 
 ---
 
-## ✨ Overview
+## ✨ Highlights
 
-This repository contains the native `xglm` architecture patch, reproducible setup instructions, a GGUF verifier, and validation results for [`facebook/xglm-2.9B`](https://huggingface.co/facebook/xglm-2.9B).
+- XGLM support for [llama.cpp](https://github.com/ggml-org/llama.cpp) via the included `xglm-llama.cpp.patch` (upstream does not ship this architecture)
+- 256,008-token vocabulary with verified multilingual token parity
+- 2,048-token context window
+- F16, Q8_0, and importance-matrix-calibrated Q4_K_M formats
 
-The conversion preserves XGLM’s scaled embeddings, offset sinusoidal positions, biased attention, exact GELU, tied input/output embeddings, and 256,008-token UGM tokenizer.
+## 📦 Choose a Format
 
-## 📦 GGUF Formats
+| File | Status | Best for |
+|---|---|---|
+| `XGLM-2.9B-F16.gguf` | Published | Reference quality and maximum fidelity |
+| `XGLM-2.9B-Q8_0.gguf` | Published | Strong quality with lower memory use |
+| `XGLM-2.9B-Q4_K_M.gguf` | Published | Strongest compact option for local inference |
 
-The model binaries are hosted on Hugging Face to keep this GitHub repository lightweight.
+## ⚠️ Runtime requirement
 
-| Format | Recommended use |
-|---|---|
-| [`XGLM-2.9B-F16.gguf`](https://huggingface.co/ShayonSarker/xglm-2.9B-GGUF/blob/main/XGLM-2.9B-F16.gguf) | Reference quality |
-| [`XGLM-2.9B-Q8_0.gguf`](https://huggingface.co/ShayonSarker/xglm-2.9B-GGUF/blob/main/XGLM-2.9B-Q8_0.gguf) | Strong quality, lower memory |
-| [`XGLM-2.9B-Q4_K_M.gguf`](https://huggingface.co/ShayonSarker/xglm-2.9B-GGUF/blob/main/XGLM-2.9B-Q4_K_M.gguf) | Strong compact local inference |
-
-## 🏗️ Build GGUF End-to-End
-
-`build_gguf.py` clones the pinned llama.cpp commit, applies the native XGLM patch, downloads the pinned Meta checkpoint, creates F16, builds a multilingual importance matrix, creates Q8_0 and Q4_K_M, verifies all three files, and runs a generation smoke test.
-
-```bash
-python -m pip install -r requirements-build.txt
-python build_gguf.py
-python build_gguf.py --dry-run
-```
-
-The default 2.9B build requires at least **30 GB** of free disk space. It writes artifacts to `build-xglm/output/` and does not upload or overwrite the published release.
-
-## 🧩 Apply Patch Manually
+Stock `llama.cpp` **cannot load these files** and fails with `unknown model architecture: 'xglm'`. XGLM is not in upstream llama.cpp. Apply the bundled patch against the pinned commit:
 
 ```bash
-git clone https://github.com/ggml-org/llama.cpp.git
+git clone https://github.com/ggml-org/llama.cpp
 cd llama.cpp
 git checkout 6b790a9c291b5d7af3312bbf9f0c558aa023b13e
-git apply /path/to/this/repository/xglm-llama.cpp.patch
+git apply /path/to/xglm-llama.cpp.patch
 cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --config Release --target llama-completion
 ```
 
-The included patch adds:
+Alternatives that need no patch: `transformers` with `facebook/xglm-2.9B`, or the HF `gguf` file with a runtime that implements `xglm`.
 
-- `LLM_ARCH_XGLM` runtime support
-- Exact-erf GELU
-- XGLM embedding scaling
-- Native `XGLMForCausalLM` conversion
-- XGLM tensor mapping and sinusoidal positions
-- XGLM UGM tokenizer metadata
+## 🏗️ Rebuild
 
-## ✅ Verify a Downloaded GGUF
+The [GitHub release hub](https://github.com/Dadhichi-Sarker-Shayon/XGLM-2.9B-GGUF) includes the end-to-end builder, XGLM runtime patch, verifier, and pinned dependencies.
 
 ```bash
-python -m pip install -r requirements.txt
-python verify_gguf.py /path/to/XGLM-2.9B-Q4_K_M.gguf
+git clone https://github.com/Dadhichi-Sarker-Shayon/XGLM-2.9B-GGUF.git
+cd XGLM-2.9B-GGUF
+python -m pip install -r requirements-build.txt
+python build_gguf.py
 ```
 
-The verifier checks architecture, model dimensions, tokenizer settings, embedding scale, and tensor count.
+The 2.9B build requires at least **30 GB** of free disk space. It does not overwrite this release.
+
+## 🚀 Run Locally
+
+Apply the [runtime patch](#-runtime-requirement) first, then:
+
+```bash
+hf download ShayonSarker/xglm-2.9B-GGUF XGLM-2.9B-Q4_K_M.gguf --local-dir .
+
+llama-completion -m ./XGLM-2.9B-Q4_K_M.gguf \
+  -p "Question: What is the capital of Japan?
+Answer:" \
+  -n 24 --temp 0
+```
+
+Expected output: `Tokyo.`
 
 <a id="verified-question-answer-examples"></a>
 
 ## ❓ Verified Question → Answer Examples
 
-These are actual Q4_K_M completions at temperature 0. The answers below were fact-checked; incorrect, repetitive, and evasive completions were removed. This curated set is not a benchmark. XGLM is a base model, so the questions are intentionally simple.
+Every row below is a verbatim `XGLM-2.9B-Q4_K_M.gguf` completion from the patched build at `--temp 0`, 24 new tokens. Nothing is hand-written; wrong output is published in the failure table below rather than edited into looking right. This is a smoke test, not a benchmark.
 
-| Question | Model answer |
+**Prompt form `Question: ...\nAnswer:`**
+
+| Question | Model answer (verbatim) |
 |---|---|
-| What is the capital city of Bangladesh? | `Dhaka.` |
-| What is the capital city of France? | `Paris.` |
-| What is the largest planet in the Solar System? | `Jupiter.` |
-| How many days are there in one week? | `There are 7 days in one week.` |
-| What gas do plants absorb during photosynthesis? | `Plants absorb carbon dioxide and water during photosynthesis.` |
-| What is the chemical symbol for water? | `H2O.` |
-| বাংলাদেশের রাজধানী কোন শহর? | `ঢাকা।` |
-| ফ্রান্সের রাজধানী কোন শহর? | `প্যারিস।` |
-| ঢাকা কোন দেশের রাজধানী? | `ঢাকা বাংলাদেশের রাজধানী।` |
+| What is the capital of Japan? | `Tokyo.` |
+| What is the capital of Italy? | `Rome.` |
+| What is the capital of Egypt? | `Cairo.` |
+| What is the largest ocean on Earth? | `The Pacific Ocean.` |
+| Which planet is closest to the Sun? | `Mercury.` |
+| How many continents are there? | `There are seven continents.` |
+| What is the chemical symbol for gold? | `Gold is a chemical element with symbol Au (from Latin: aurum).` |
+
+**Plain completion form** (a base model, so sentence continuation often works better than Q/A)
+
+| Prompt | Model answer (verbatim) |
+|---|---|
+| `The capital city of France is` | `Paris.` |
+| `The chemical symbol for water is` | `H2O.` |
+| `The capital city of Bangladesh is` | `also known as the capital of the country. Dhaka is the capital of Bangladesh.` |
+| `Plants absorb` | `carbon dioxide from the atmosphere and convert it into sugars, which are then used by the plant to produce energy.` |
+
+## ⚠️ Known Failures
+
+| Prompt | Model answer (verbatim) |
+|---|---|
+| `Question: How many days are in a leap year?\nAnswer:` | `There are 30 days in a leap year.` |
+| `The largest planet in the Solar System is` | `the Earth.` |
+| `There are` | `no reviews yet.` |
+| `Question: What is the capital of Japan?\nAnswer:` (Bengali script) | `জাপানের রাজধানী হচ্ছে জাপানের রাজধানী হচ্ছে জাপানের রাজধানী হচ্ছে` |
+| `সূর্যের নিকটতম গ্রহ কোনটি?` | `সূর্যের নিকটতম গ্রহ হচ্ছে- মঙ্গল।` |
+| `ফ্রান্সের রাজধানী` | `প্যারিসে ঐতিহাসিক স্থাপনাগুলোর মধ্যে অন্যতম হলো প্যারিস প্যারেড।` |
+
+Bengali/Bangla entity recall is unreliable on this Q4 quantization: the model names the right city only incidentally inside a rambling sentence, and it answers some Bangla questions in English or loops the prompt. Treat Bangla output as a research baseline, not a finished translation or QA system.
 
 ## 📈 Performance
 
@@ -110,19 +155,18 @@ Lower perplexity (PPL) is better. Scores use separate held-out English and Benga
 | Q8_0 | 87.35 | -4.24% | 8.00 | -0.78% |
 | Q4_K_M | 82.88 | -9.15% | 8.52 | +5.70% |
 
-### Validation Summary
+## 🔬 Validation
 
-- ✅ Token IDs match Transformers across Bengali, English, French, Chinese, and Arabic.
-- ✅ F16 English and Bengali predictions match Transformers.
-- ✅ Q8_0 and Q4_K_M pass held-out English and Bengali quality gates.
-- ✅ Deterministic English and Bengali generation checks pass.
+- Token IDs match Transformers across Bengali, English, French, Chinese, and Arabic.
+- F16 English and Bengali predictions match Transformers.
+- Both quantized formats pass the English and Bengali quality gates.
 
 ## 🧩 Intended Use
 
 XGLM-2.9B is a **base language model**, not an instruction-tuned assistant. It is suitable for higher-quality multilingual research, Bengali/English workloads, local generation, and GGUF runtime testing.
 
-Validate important outputs independently. Generated text may be inaccurate or inappropriate.
+Outputs may be inaccurate or inappropriate. Validate important results independently.
 
 ## 📄 License
 
-MIT. See [`LICENSE`](./LICENSE) and the [upstream model card](https://huggingface.co/facebook/xglm-2.9B) for source-model attribution.
+MIT. See the [upstream model card](https://huggingface.co/facebook/xglm-2.9B) for source-model details and attribution.
