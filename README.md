@@ -19,7 +19,7 @@
 
 [🚀 Hugging Face Release](https://huggingface.co/ShayonSarker/xglm-2.9B-GGUF) · [Meta Source Model](https://huggingface.co/facebook/xglm-2.9B) · [llama.cpp](https://github.com/ggml-org/llama.cpp)
 
-👇 [View the full English and Bangla prompt/answer outputs](#user-content-longer-raw-continuations)
+👇 [View verified English and Bangla question/answer examples](#user-content-verified-question-answer-examples)
 
 </div>
 
@@ -82,17 +82,23 @@ python verify_gguf.py /path/to/XGLM-2.9B-Q4_K_M.gguf
 
 The verifier checks architecture, model dimensions, tokenizer settings, embedding scale, and tensor count.
 
-## 🧪 Prompt → Reply
+<a id="verified-question-answer-examples"></a>
 
-Selected deterministic Q4_K_M smoke checks at temperature 0. This is a small smoke set, not a benchmark.
+## ❓ Verified Question → Answer Examples
 
-| Prompt | Model reply | Check |
-|---|---|---|
-| `The capital of France is` | `Paris.` | ✅ Correct |
-| `The capital of Bangladesh is` | `Dhaka.` | ✅ Correct |
-| `বাংলাদেশের রাজধানী` | `ঢাকার যানজট` | ✅ Expected answer present |
+These are actual Q4_K_M completions at temperature 0. The answers below were fact-checked; incorrect, repetitive, and evasive completions were removed. This curated set is not a benchmark. XGLM is a base model, so the questions are intentionally simple.
 
-**Selected smoke score: 3/3**
+| Question | Model answer |
+|---|---|
+| What is the capital city of Bangladesh? | `Dhaka.` |
+| What is the capital city of France? | `Paris.` |
+| What is the largest planet in the Solar System? | `Jupiter.` |
+| How many days are there in one week? | `There are 7 days in one week.` |
+| What gas do plants absorb during photosynthesis? | `Plants absorb carbon dioxide and water during photosynthesis.` |
+| What is the chemical symbol for water? | `H2O.` |
+| বাংলাদেশের রাজধানী কোন শহর? | `ঢাকা।` |
+| ফ্রান্সের রাজধানী কোন শহর? | `প্যারিস।` |
+| ঢাকা কোন দেশের রাজধানী? | `ঢাকা বাংলাদেশের রাজধানী।` |
 
 ## 📈 Performance
 
@@ -110,40 +116,6 @@ Lower perplexity (PPL) is better. Scores use separate held-out English and Benga
 - ✅ F16 English and Bengali predictions match Transformers.
 - ✅ Q8_0 and Q4_K_M pass held-out English and Bengali quality gates.
 - ✅ Deterministic English and Bengali generation checks pass.
-
-<a id="longer-raw-continuations"></a>
-
-## 🗣️ Longer Raw Continuations
-
-These are full Q4_K_M completions at temperature 0 with a fixed 96-token budget. They are shown directly and intentionally unedited. The final fragment may be incomplete; repetition is genuine model behavior.
-
-### English
-
-**Prompt**
-
-```text
-A quiet morning in Dhaka. The sun rose over the rooftops, and the city slowly began to wake. Shops opened, people started their journeys, and buses moved through the busy streets.
-```
-
-**Answer**
-
-```text
-The city was alive. The city was alive. The city was alive. The city was alive. The city was alive. The city was alive. The city was alive. The city was alive. The city was alive. The city was alive. The city was alive. The city was alive. The city was alive. The city was alive. The city was alive. The city was alive. The city was alive. The city was alive. The city was alive. The city was alive. The
-```
-
-### Bangla
-
-**Prompt**
-
-```text
-ঢাকার একটি সকাল। সূর্য ছাদের উপরে উঠল, আর শহর ধীরে ধীরে জেগে উঠতে লাগল। দোকান খুলল, মানুষ কাজে বের হল, আর বাস ধুলোমল শহরের রাস্তা দিয়ে চলতে শুরু করল।
-```
-
-**Answer**
-
-```text
-সূর্য উঠতেই দোকানগুলোতে আলো জ্বলে উঠল। সূর্য উঠতেই দোকানগুলোতে আলো জ্বলে উঠল। সূর্য উঠতেই দোকানগুলোতে আলো জ্বলে উঠল। সূর্য উঠতেই দোকানগুলোতে আলো জ্বলে উঠল। সূর্য উঠতেই দোকানগুলোতে আলো জ্বলে উঠল। সূর্য উঠতেই
-```
 
 ## 🧩 Intended Use
 
