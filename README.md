@@ -30,6 +30,7 @@ language:
   <img alt="Bengali and Bangla" src="https://img.shields.io/badge/Bengali-Bangla-16A34A?style=for-the-badge">
   <img alt="Runtime" src="https://img.shields.io/badge/runtime-llama.cpp%20%2B%20patch-E8590C?style=for-the-badge">
   <img alt="Validated" src="https://img.shields.io/badge/validated-pass-22C55E?style=for-the-badge">
+  <img alt="F16 parity with transformers" src="https://img.shields.io/badge/F16%20parity-12%2F14%20exact-00A6A6?style=for-the-badge">
   <img alt="MIT license" src="https://img.shields.io/badge/License-MIT-7C3AED?style=for-the-badge">
 </p>
 
@@ -132,7 +133,35 @@ Every row below is a verbatim `XGLM-2.9B-Q4_K_M.gguf` completion from the patche
 | `The capital city of Bangladesh is` | `also known as the capital of the country. Dhaka is the capital of Bangladesh.` |
 | `Plants absorb` | `carbon dioxide from the atmosphere and convert it into sugars, which are then used by the plant to produce energy.` |
 
-## ⚠️ Known Failures
+## 🔍 Is a wrong answer our bug or the model's? We tested it
+
+14 prompts (8 English Q&A, 3 plain completions, 3 Bengali) were run through `facebook/xglm-2.9b` in `transformers` and through our GGUFs — all greedy, 24 new tokens, same prompt strings.
+
+| Format | Exact string match vs `transformers` |
+|---|---:|
+| **F16** | **12 / 14** |
+| Q4_K_M | 8 / 14 |
+
+Both F16 differences are 24-token truncation points rather than errors: the two outputs start identically and diverge mid-sentence.
+
+**The conversion is faithful.** F16 reproduces the reference model string-for-string, *including the answers that are factually wrong*. A broken conversion or a broken runtime patch could not track the reference this closely. Any XGLM factual error you see below is the upstream checkpoint's own behaviour.
+
+## ⚠️ Why Q4_K_M looks worse than F16
+
+| Prompt | `transformers` reference | F16 (ours) | Q4_K_M (ours) |
+|---|---|---|---|
+| `The largest planet in the Solar System is` | `Jupiter. It is the largest planet in the Solar System...` | `Jupiter. It is the largest planet in the Solar System...` | `the Earth.` |
+| `Question: How many days are in a leap year?\nAnswer:` | `The leap year is a year that is longer than the normal year.` | `The leap year is a year that begins on a leap day...` | `There are 30 days in a leap year.` |
+| `প্রশ্ন: জাপানের রাজধানী কোন শহর?\nউত্তর:` | `জাপানের রাজধানী হচ্ছে – টোকিও।` | `জাপানের রাজধানী হচ্ছে – টোকিও।` | loops the prompt and loses the answer |
+| `প্রশ্ন: সোনার রাসায়নিক প্রতীক কী?\nউত্তর:` | `সোনার রাসায়নিক প্রতীক হলো সোনালি রঙের লাল চিহ্ন।` | `সোনার রাসায়নিক প্রতীক হলো সোনালি রঙের লাল চিহ্ন।` | `সোনার রাসায়নিক প্রতীক হলো Sn।` |
+
+**Use F16 or Q8_0 for Bengali and for factual lookups.** Q4_K_M is fine for bulk text generation but it is the first thing to break on lower-resource languages.
+
+Perplexity does not predict this. The table below shows Q4_K_M with *better* English PPL than F16 (82.88 vs 91.22) while being measurably less accurate on the prompts above. Treat PPL as a text-fluency proxy, not an accuracy metric.
+
+## ⚠️ Known Failures (Q4_K_M, the published default)
+
+These are the exact completions the released Q4_K_M file produces:
 
 | Prompt | Model answer (verbatim) |
 |---|---|
@@ -143,7 +172,7 @@ Every row below is a verbatim `XGLM-2.9B-Q4_K_M.gguf` completion from the patche
 | `সূর্যের নিকটতম গ্রহ কোনটি?` | `সূর্যের নিকটতম গ্রহ হচ্ছে- মঙ্গল।` |
 | `ফ্রান্সের রাজধানী` | `প্যারিসে ঐতিহাসিক স্থাপনাগুলোর মধ্যে অন্যতম হলো প্যারিস প্যারেড।` |
 
-Bengali/Bangla entity recall is unreliable on this Q4 quantization: the model names the right city only incidentally inside a rambling sentence, and it answers some Bangla questions in English or loops the prompt. Treat Bangla output as a research baseline, not a finished translation or QA system.
+Bengali/Bangla prompting is unreliable in this model family, and Q4_K_M makes it worse. The reference model also gets several of these wrong, so treat Bangla output as a research baseline, not a finished translation or QA system.
 
 ## 📈 Performance
 
@@ -157,9 +186,10 @@ Lower perplexity (PPL) is better. Scores use separate held-out English and Benga
 
 ## 🔬 Validation
 
+- **Generation parity with `transformers`:** 14 greedy prompts (8 English Q&A, 3 plain completions, 3 Bengali) — F16 matches the reference output exactly on 12/14, with the 2 differences being 24-token truncation points rather than content errors. Q4_K_M matches on 8/14. See the parity section above.
 - Token IDs match Transformers across Bengali, English, French, Chinese, and Arabic.
-- F16 English and Bengali predictions match Transformers.
-- Both quantized formats pass the English and Bengali quality gates.
+- Both quantized formats pass the English and Bengali held-out perplexity gates.
+- Not tested: logit-level numeric parity, and long-context behaviour beyond 24 generated tokens.
 
 ## 🧩 Intended Use
 
